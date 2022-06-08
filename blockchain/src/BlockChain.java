@@ -1,6 +1,8 @@
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.List;
@@ -9,7 +11,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class BlockChain implements Serializable {
-    private final Map<String, List<Transaction>> TRANS_VALIDATION;
+    // Metadata
+    private final Map<String, List<Transaction>> TRANS_VALIDATION; // Transsaction are stored on the blockchain
+    private final Map<String, String> REGISTRATION_TABLE; // NOT STORED ON THE BLOCK CHAIN
     private final List<Block> BLOCK_CHAIN;
 
     public BlockChain() {
@@ -24,22 +28,32 @@ public class BlockChain implements Serializable {
         FileOutputStream fos = new FileOutputStream(path);
         ObjectOutputStream oos = new ObjectOutputStream(fos);
         oos.writeObject(blockChain);
+        fos.close();
         oos.close();
     }
 
     /**
      * Loading the Blockchain from disk
      */
-    public static BlockChain load(String path) {
-        return null;
+    public static BlockChain load(String path) throws FileNotFoundException, ClassNotFoundException, IOException {
+        FileInputStream fis = new FileInputStream(path);
+        ObjectInputStream ois = new ObjectInputStream(fis);
+        BlockChain blockChain = (BlockChain) ois.readObject();
+        fis.close();
+        ois.close();
+        return blockChain;
     }
 
     /**
      * Handles Creating new blocks, incase exceeding the threshold
      * overwise, just add the transaction
      */
-    public void addTransaction() {
+    public void addTransaction(Transaction data) {
 
+        // Checking the threshold
+        // Mine the block
+        //
+        // Just Add
     }
 
     /**
@@ -61,5 +75,9 @@ public class BlockChain implements Serializable {
 
     public String toString() {
         return BLOCK_CHAIN.toString();
+    }
+
+    public static void main(String[] args) {
+        System.out.println("Hello World!");
     }
 }
