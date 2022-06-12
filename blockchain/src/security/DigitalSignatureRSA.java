@@ -2,6 +2,7 @@ package security;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -19,6 +20,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 public class DigitalSignatureRSA {
+    private static final Charset UTF_8 = StandardCharsets.UTF_8;
 
     public static byte[] encrypt(byte[] message, String password)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException,
@@ -29,7 +31,7 @@ public class DigitalSignatureRSA {
         encryptCipher.init(Cipher.ENCRYPT_MODE, privatekey);
 
         String encodedMessage = Base64.getEncoder().encodeToString(message);
-        byte[] secretMessageBytes = encodedMessage.getBytes(StandardCharsets.UTF_8);
+        byte[] secretMessageBytes = encodedMessage.getBytes(UTF_8);
         byte[] encryptedMessageBytes = encryptCipher.doFinal(secretMessageBytes);
         // String encodedMessage =
         // Base64.getEncoder().encodeToString(encryptedMessageBytes);
@@ -38,13 +40,13 @@ public class DigitalSignatureRSA {
 
     public static String decrypt(String cipherText, String publicKey) throws InvalidKeyException,
             NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+
         SecretKey publicKey1 = stringToKey(publicKey);
         Cipher decryptCipher = Cipher.getInstance("RSA");
         decryptCipher.init(Cipher.DECRYPT_MODE, publicKey1);
-        byte[] secretMessageBytes = cipherText.getBytes(StandardCharsets.UTF_8);
-        byte[] decryptedMessageBytes = decryptCipher.doFinal(secretMessageBytes);
-        String decryptedMessage = new String(decryptedMessageBytes, StandardCharsets.UTF_8);
-        return decryptedMessage;
+        byte[] secretMessageBytes = cipherText.getBytes(UTF_8);
+
+        return new String(decryptCipher.doFinal(secretMessageBytes), UTF_8);
     }
 
     public static void encryptFile(String fromFile, String toFile, String password)
@@ -72,5 +74,4 @@ public class DigitalSignatureRSA {
         byte[] decodedKey = Base64.getDecoder().decode(key);
         return new SecretKeySpec(decodedKey, 0, decodedKey.length, "RSA");
     }
-
 }
