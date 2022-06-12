@@ -1,7 +1,5 @@
 package security;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -9,20 +7,13 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
-import java.security.Key;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
-import java.util.Optional;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -72,12 +63,9 @@ public class DigitalSignatureRSA {
 
     public static byte[] decryptFile(String path, String password) throws IOException, InvalidKeyException,
             NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
-        // Read the file
-        byte[] fileContent = Files.readAllBytes(Paths.get(path));
-        String filecontent = Base64.getEncoder().encodeToString(fileContent);
-        byte[] decryptfileContent = decrypt(filecontent, password).getBytes(StandardCharsets.UTF_8);
 
-        return decryptfileContent;
+        byte[] fileContent = Files.readAllBytes(Paths.get(path));
+        return decrypt(Base64.getEncoder().encodeToString(fileContent), password).getBytes(StandardCharsets.UTF_8);
     }
 
     public static SecretKey stringToKey(String key) {
