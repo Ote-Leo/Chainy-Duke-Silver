@@ -17,7 +17,7 @@ public class MainFrame extends JFrame {
         // create a grid layout with 2 rows and 2 columns
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new GridLayout(4, 1, 5, 5));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
         JLabel welcome = new JLabel("Welcome " + user.name, SwingConstants.CENTER);
         welcome.setFont(mainFont);
 
@@ -43,15 +43,22 @@ public class MainFrame extends JFrame {
         });
 
         JButton displayMatrixView = new JButton("Display Matrix View");
+        displayMatrixView.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                MatrixView matrixView = new MatrixView();
+                matrixView.initialize();
+            }
+        });
 
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setLayout(new GridLayout(2, 1, 10, 0));
-        buttonsPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 30, 50));
+        // buttonsPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, , 50));
         buttonsPanel.add(addTransaction);
         buttonsPanel.add(displayMatrixView);
         buttonsPanel.add(tfTransactionData);
 
-        JLabel tHistory = new JLabel("Your Transaction History:", SwingConstants.LEFT);
+        JLabel tHistory = new JLabel("Your Transaction History:");
         tHistory.setFont(mainFont);
 
         mainPanel.add(welcome);
@@ -75,13 +82,13 @@ public class MainFrame extends JFrame {
         table.getColumnModel().getColumn(0).setPreferredWidth(table.getColumnModel().getColumn(0).getWidth() * 2);
         table.getColumnModel().getColumn(2).setPreferredWidth(table.getColumnModel().getColumn(2).getWidth() * 3);
         table.getColumnModel().getColumn(3).setPreferredWidth(table.getColumnModel().getColumn(3).getWidth() * 4);
-        table.getColumnModel().getColumn(1).setPreferredWidth(400);
+        table.getColumnModel().getColumn(1).setPreferredWidth(420);
 
         addTransaction.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String transactionData = tfTransactionData.getText();
-                if (transactionData.isEmpty()) {
+                if (transactionData.isEmpty() || transactionData.equals("Enter transaction data here")) {
                     JOptionPane.showMessageDialog(null, "Please enter transaction data");
                 } else {
                     // create an arraylist of strings
@@ -112,13 +119,15 @@ public class MainFrame extends JFrame {
 
         // add scroll pane to the table
         JScrollPane scrollPane = new JScrollPane(table);
+        //border for the scroll pane
 
-        scrollPane.setPreferredSize(new Dimension(500, 100));
+        scrollPane.setPreferredSize(new Dimension(1100, 0));
 
         scrollPane.setColumnHeaderView(table.getTableHeader());
 
-        mainPanel.add(scrollPane);
+        // mainPanel.add(scrollPane);
         add(mainPanel, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.LINE_START);
 
         // add(scrollPane);
         setTitle("Dashboard");
@@ -127,4 +136,12 @@ public class MainFrame extends JFrame {
         setLocationRelativeTo(null);
         setVisible(true);
     }
+    // public static void main(String[] args) {
+    // MainFrame mainFrame = new MainFrame();
+    // //create a new user
+    // User user = new User("John");
+    // // initialize the main frame
+    // mainFrame.initialize(user);
+
+    // }
 }
