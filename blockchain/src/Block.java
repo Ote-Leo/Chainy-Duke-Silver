@@ -1,8 +1,10 @@
+import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import security.CryptoUtils;
 import security.DukeHash;
 import util.Tuple;
 
@@ -136,8 +138,33 @@ public class Block {
         this.nonce = nonce;
     }
 
-    public Tuple<String, Timestamp> mineBlock() {
-        return null;
+    /**
+     * A non-threaded mining function, the function manipulates the block nonce and
+     * mining timestamp
+     * 
+     * @param prefixSize Number of zeros in the hash prefix
+     * @return A tuple containing the mine hash and it's timestamp
+     */
+    public Tuple<String, Timestamp> mineBlock(int prefixSize) {
+        SecureRandom swanson = new SecureRandom();
+        String blockBody = getMainBlockBody();
+        String hashPrefix = new String(new char[prefixSize]).replace('\0', '0');
+
+        long nonce;
+        String hash;
+        Timestamp timeStamp;
+
+        do {
+            nonce = swanson.nextLong();
+            timeStamp = new Timestamp(System.currentTimeMillis());
+            String tempBody = blockBody + Long.toString(nonce) + timeStamp.toString();
+            hash = DukeHash.hash(tempBody);
+        } while (!hash.substring(0, prefixSize).equals(hashPrefix));
+
+        setNonce(nonce);
+        setTimeStamp(timeStamp);
+
+        return new Tuple<String, Timestamp>(hash, timeStamp);
     }
 
     public boolean stepMineBlock() {
@@ -155,5 +182,4 @@ public class Block {
     // private String decryptTransaction(String password) {
     // return null;
     // }
-
 }
