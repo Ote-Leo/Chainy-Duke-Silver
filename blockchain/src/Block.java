@@ -1,9 +1,10 @@
-import java.security.Timestamp;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import security.DukeHash;
+import util.Tuple;
 
 /**
  * Each Block on the can only hold up to 3 transaction
@@ -50,10 +51,17 @@ public class Block {
         return this.uuid;
     }
 
-    public String getHash() {
-        String blockBody = transactions.toString() + previousHash
-                + (miningTimestamp == null ? "" : miningTimestamp.toString()) + Long.toString(nonce);
+    public String getHash() throws IllegalStateException {
+        if (miningTimestamp == null)
+            throw new IllegalStateException(String.format(NULL_MINE_TIMESTAMP_ERR, uuid.toString(), this));
+
+        String blockBody = transactions.toString() + previousHash + Long.toString(nonce) + miningTimestamp.toString();
         return DukeHash.hash(blockBody);
+    }
+
+    public String getMainBlockBody() {
+        String blockBody = transactions.toString() + previousHash;
+        return blockBody;
     }
 
     @Override
@@ -124,9 +132,21 @@ public class Block {
         return true;
     }
 
-    // public void mine() {
+    public void setNonce(long nonce) {
+        this.nonce = nonce;
+    }
 
-    // }
+    public Tuple<String, Timestamp> mineBlock() {
+        return null;
+    }
+
+    public boolean stepMineBlock() {
+        return false;
+    }
+
+    public void setTimeStamp(Timestamp timeStamp) {
+        this.miningTimestamp = timeStamp;
+    }
 
     // private String encryptTransaction() {
     // return null;
@@ -136,7 +156,4 @@ public class Block {
     // return null;
     // }
 
-    // public String toString() {
-    // return String.format("BLOCK: [PREVIOUS_HASH=%s, TRANSACTIONS=%s]");
-    // }
 }
