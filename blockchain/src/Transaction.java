@@ -1,12 +1,14 @@
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * The main data unit in the blockchain.
  * Transaction are not modifiable.
  */
 public final class Transaction {
+    private final UUID uuid;
     private final String[] data;
     private final String signature;
     private final String previousHash;
@@ -20,6 +22,7 @@ public final class Transaction {
         this.data = data;
         this.keyPair = Optional.empty();
 
+        this.uuid = UUID.randomUUID();
         this.timestamp = new Timestamp(System.currentTimeMillis());
     }
 
@@ -29,6 +32,7 @@ public final class Transaction {
         this.keyPair = keyPair;
         this.data = data;
 
+        this.uuid = UUID.randomUUID();
         this.timestamp = new Timestamp(System.currentTimeMillis());
     }
 
@@ -50,6 +54,10 @@ public final class Transaction {
 
     public Timestamp gTimestamp() {
         return this.timestamp;
+    }
+
+    public UUID getUUID() {
+        return this.uuid;
     }
 
     @Override
@@ -105,7 +113,8 @@ public final class Transaction {
 
     @Override
     public String toString() {
-        return String.format("TRANSACTION [DATA = %s, KEYPAIR = %s, PREVIOUS HASH = s, SIGNATURE = %s, TIMESTAMP = %s]",
-                Arrays.toString(data), keyPair, previousHash, signature, timestamp.toString());
+        return String.format(
+                "TRANSACTION(%s) [DATA = %s, KEYPAIR = %s, PREVIOUS HASH = s, SIGNATURE = %s, TIMESTAMP = %s]",
+                uuid.toString(), Arrays.toString(data), keyPair, previousHash, signature, timestamp.toString());
     }
 }
