@@ -12,7 +12,7 @@ public class Block {
     private static final int TRANSACTIONAL_CAPACITY = 3;
 
     private static final String NULL_MINE_TIMESTAMP_ERR = "BLOCK (UUID: `%s', MEM: `%s') HAVE NOT BEEN MINED YET!";
-    private static final String FULL_BLOCK_ERR = "BLOCK `%s' IS FULL (BLOCK CAPACITY IS `%d')";
+    private static final String FULL_BLOCK_ERR = "BLOCK (UUID: `%s', MEM: `%s') IS FULL (BLOCK CAPACITY IS `%d')";
 
     private final List<Transaction> transactions;
     private final String previousHash;
@@ -107,6 +107,21 @@ public class Block {
         return String.format("BLOCK (%s) [MINING TIMESTAMP = %s, NONCE = %s, PREVIOUS HASH = %s, TRANSACTIONS = %s]",
                 uuid.toString(), (miningTimestamp == null ? "null" : miningTimestamp.toString()), Long.toString(nonce),
                 previousHash, transactions.toString());
+    }
+
+    /**
+     * Add new transaction to the block, without checking for data integrity.
+     * 
+     * @param transaction The transaction to be added
+     * @return `true` if the transaction have been added successfully
+     * @throws IllegalStateException In case the block is full
+     */
+    public boolean addTransaction(Transaction transaction) throws IllegalStateException {
+        if (isFull())
+            throw new IllegalStateException(String.format(Block.FULL_BLOCK_ERR, uuid.toString(), this));
+
+        transactions.add(transaction);
+        return true;
     }
 
     // public void mine() {
