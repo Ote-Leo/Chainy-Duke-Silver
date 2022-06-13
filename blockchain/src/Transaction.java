@@ -3,6 +3,8 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
 
+import security.DukeHash;
+
 /**
  * The main data unit in the blockchain.
  * Transaction are not modifiable.
@@ -104,6 +106,12 @@ public final class Transaction {
         return true;
     }
 
+    public String getHash() {
+        String transactionBody = Arrays.toString(data) + keyPair.toString() + previousHash + signature
+                + timestamp.toString() + uuid;
+        return DukeHash.hash(transactionBody);
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -113,6 +121,7 @@ public final class Transaction {
         result = prime * result + ((previousHash == null) ? 0 : previousHash.hashCode());
         result = prime * result + ((signature == null) ? 0 : signature.hashCode());
         result = prime * result + ((timestamp == null) ? 0 : timestamp.hashCode());
+        result = prime * result + ((uuid == null) ? 0 : uuid.hashCode());
         return result;
     }
 
