@@ -1,8 +1,19 @@
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.Timestamp;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.crypto.AEADBadTagException;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+
+import security.AesGcmPasswordEncryption;
 import security.DukeHash;
 
 /**
@@ -11,34 +22,35 @@ import security.DukeHash;
  */
 public final class Transaction {
     private final UUID uuid;
-    private final String[] data;
+    private final String data;
     private final String signature;
     private final String previousHash;
     private final Optional<String> keyPair;
 
     private final Timestamp timestamp;
 
-    public Transaction(String previousHash, String signature, String[] data) {
+    public Transaction(String previousHash, String signature, String[] data, String encryptKey) {
         this.previousHash = previousHash;
         this.signature = signature;
-        this.data = data;
+        this.data = encryptData(data, encryptKey);
         this.keyPair = Optional.empty();
 
         this.uuid = UUID.randomUUID();
         this.timestamp = new Timestamp(System.currentTimeMillis());
     }
 
-    public Transaction(String previousHash, String signature, String[] data, Optional<String> keyPair) {
+    public Transaction(String previousHash, String signature, String[] data, Optional<String> keyPair,
+            String encryptKey) {
         this.previousHash = previousHash;
         this.signature = signature;
         this.keyPair = keyPair;
-        this.data = data;
+        this.data = encryptData(data, encryptKey);
 
         this.uuid = UUID.randomUUID();
         this.timestamp = new Timestamp(System.currentTimeMillis());
     }
 
-    public String[] getData() {
+    public String getData() {
         return this.data;
     }
 
@@ -76,7 +88,7 @@ public final class Transaction {
         if (getClass() != obj.getClass())
             return false;
         Transaction other = (Transaction) obj;
-        if (!Arrays.equals(data, other.data))
+        if (!data.equals(other.data))
             return false;
         if (keyPair == null) {
             if (other.keyPair != null)
@@ -107,16 +119,50 @@ public final class Transaction {
     }
 
     public String getHash() {
-        String transactionBody = Arrays.toString(data) + keyPair.toString() + previousHash + signature
-                + timestamp.toString() + uuid;
+        String transactionBody = data + keyPair.toString() + previousHash + timestamp.toString() + uuid;
         return DukeHash.hash(transactionBody);
+    }
+
+    /**
+     * A function for encrypting the transaction's body (data)
+     * 
+     * @param data     An array that will be held by the transaction
+     * @param password The password of encryption
+     * @return The encrypted data, otherwise expect anything else
+     */
+    public String encryptData(String[] data, String password) {
+        try {
+            return new String(Base64.getEncoder()
+                    .encode(AesGcmPasswordEncryption.encrypt(Arrays.toString(data).getBytes(), password)));
+        } catch (InvalidKeyException | NoSuchAlgorithmException | InvalidKeySpecException | NoSuchPaddingException
+                | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Decrypt the transaction data, provided the encryption key as a password
+     * 
+     * @param password The encryption key
+     * @return Hopefully the encrypted data
+     */
+    public String decryptData(String password) {
+        try {
+            return AesGcmPasswordEncryption.decrypt(data, password);
+        } catch (InvalidKeyException | NoSuchAlgorithmException | InvalidKeySpecException
+                | NoSuchPaddingException | InvalidAlgorithmParameterException | IllegalBlockSizeException
+                | BadPaddingException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + Arrays.hashCode(data);
+        result = prime * result + data.hashCode();
         result = prime * result + ((keyPair == null) ? 0 : keyPair.hashCode());
         result = prime * result + ((previousHash == null) ? 0 : previousHash.hashCode());
         result = prime * result + ((signature == null) ? 0 : signature.hashCode());
@@ -129,6 +175,6 @@ public final class Transaction {
     public String toString() {
         return String.format(
                 "TRANSACTION(%s) [DATA = %s, KEYPAIR = %s, PREVIOUS HASH = %s, SIGNATURE = %s, TIMESTAMP = %s]",
-                uuid.toString(), Arrays.toString(data), keyPair, previousHash, signature, timestamp.toString());
+                uuid.toString(), data, keyPair, previousHash, signature, timestamp.toString());
     }
 }
