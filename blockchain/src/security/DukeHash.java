@@ -17,7 +17,7 @@ public class DukeHash {
             MessageDigest messageDigest = MessageDigest.getInstance(HASHING_ALGORITHM);
             return CryptoUtils.hexRepresentation(messageDigest.digest(message.getBytes(UTF_8)));
         } catch (NoSuchAlgorithmException e) {
-            System.out.println("SOME IS REALLy WRONG!");
+            System.out.println("SOMETHING IS REALLY WRONG WITH YOUR JAVA!");
             e.printStackTrace();
             return null;
         }
