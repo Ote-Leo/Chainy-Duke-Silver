@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import security.CryptoUtils;
 import security.DukeHash;
 import util.Tuple;
 
@@ -167,8 +166,28 @@ public class Block {
         return new Tuple<String, Timestamp>(hash, timeStamp);
     }
 
-    public boolean stepMineBlock() {
-        return false;
+    /**
+     * A function that attempts to mine the block, in the case of successful mining,
+     * the function manipulates the block by adding the new nonce and time stamp
+     * 
+     * @param swanson    A random number generator
+     * @param prefixSize Number of zeros in the mined hash
+     * @return `true` in case of a successful mining
+     */
+    public boolean stepMineBlock(SecureRandom swanson, int prefixSize) {
+        String blockBody = getMainBlockBody();
+        String hashPrefix = new String(new char[prefixSize]).replace('\0', '0');
+
+        long nonce = swanson.nextLong();
+        Timestamp timeStamp = new Timestamp(System.currentTimeMillis());
+        String hash = DukeHash.hash(blockBody + Long.toString(nonce) + timeStamp);
+
+        if (!hash.substring(0, prefixSize).equals(hashPrefix))
+            return false;
+
+        setNonce(nonce);
+        setTimeStamp(timeStamp);
+        return true;
     }
 
     public void setTimeStamp(Timestamp timeStamp) {
