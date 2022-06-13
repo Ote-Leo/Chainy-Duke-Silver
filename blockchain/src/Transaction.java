@@ -128,7 +128,7 @@ public final class Transaction {
     @Override
     public String toString() {
         return String.format(
-                "TRANSACTION(%s) [DATA = %s, KEYPAIR = %s, PREVIOUS HASH = s, SIGNATURE = %s, TIMESTAMP = %s]",
+                "TRANSACTION(%s) [DATA = %s, KEYPAIR = %s, PREVIOUS HASH = %s, SIGNATURE = %s, TIMESTAMP = %s]",
                 uuid.toString(), Arrays.toString(data), keyPair, previousHash, signature, timestamp.toString());
     }
 }
