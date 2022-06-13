@@ -96,6 +96,11 @@ public final class Transaction {
                 return false;
         } else if (!timestamp.equals(other.timestamp))
             return false;
+        if (uuid == null) {
+            if (other.uuid != null)
+                return false;
+        } else if (!uuid.equals(other.uuid))
+            return false;
         return true;
     }
 
