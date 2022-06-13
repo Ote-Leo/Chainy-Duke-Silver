@@ -1,9 +1,10 @@
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Optional;
 
 /**
- * NON-MODIFIABLE
- * The data structure to hold the transaction
+ * The main data unit in the blockchain.
+ * Transaction are not modifiable.
  */
 public final class Transaction {
     private final String[] data;
@@ -11,11 +12,15 @@ public final class Transaction {
     private final String previousHash;
     private final Optional<String> keyPair;
 
+    private final Timestamp timestamp;
+
     public Transaction(String previousHash, String signature, String[] data) {
         this.previousHash = previousHash;
         this.signature = signature;
         this.data = data;
         this.keyPair = Optional.empty();
+
+        this.timestamp = new Timestamp(System.currentTimeMillis());
     }
 
     public Transaction(String previousHash, String signature, String[] data, Optional<String> keyPair) {
@@ -23,6 +28,8 @@ public final class Transaction {
         this.signature = signature;
         this.keyPair = keyPair;
         this.data = data;
+
+        this.timestamp = new Timestamp(System.currentTimeMillis());
     }
 
     public String[] getData() {
@@ -41,15 +48,13 @@ public final class Transaction {
         return keyPair;
     }
 
+    public Timestamp gTimestamp() {
+        return this.timestamp;
+    }
+
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + Arrays.hashCode(data);
-        result = prime * result + ((keyPair == null) ? 0 : keyPair.hashCode());
-        result = prime * result + ((previousHash == null) ? 0 : previousHash.hashCode());
-        result = prime * result + ((signature == null) ? 0 : signature.hashCode());
-        return result;
+    protected Object clone() throws CloneNotSupportedException {
+        return super.clone();
     }
 
     @Override
@@ -78,12 +83,29 @@ public final class Transaction {
                 return false;
         } else if (!signature.equals(other.signature))
             return false;
+        if (timestamp == null) {
+            if (other.timestamp != null)
+                return false;
+        } else if (!timestamp.equals(other.timestamp))
+            return false;
         return true;
     }
 
     @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + Arrays.hashCode(data);
+        result = prime * result + ((keyPair == null) ? 0 : keyPair.hashCode());
+        result = prime * result + ((previousHash == null) ? 0 : previousHash.hashCode());
+        result = prime * result + ((signature == null) ? 0 : signature.hashCode());
+        result = prime * result + ((timestamp == null) ? 0 : timestamp.hashCode());
+        return result;
+    }
+
+    @Override
     public String toString() {
-        return String.format("TRANSACTION [DATA = %s, KEYPAIR = %s, PREVIOUS HASH = %s, SIGNATURE = %s]",
-                Arrays.toString(data), keyPair, previousHash, signature);
+        return String.format("TRANSACTION [DATA = %s, KEYPAIR = %s, PREVIOUS HASH = s, SIGNATURE = %s, TIMESTAMP = %s]",
+                Arrays.toString(data), keyPair, previousHash, signature, timestamp.toString());
     }
 }
