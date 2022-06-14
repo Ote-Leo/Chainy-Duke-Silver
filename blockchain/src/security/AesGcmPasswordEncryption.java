@@ -1,16 +1,11 @@
 package security;
 
-import util.Tuple;
 
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
+
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -19,17 +14,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
-import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Base64;
 
-import javax.crypto.AEADBadTagException;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SealedObject;
@@ -251,22 +243,4 @@ public class AesGcmPasswordEncryption {
         return decrypt(Base64.getEncoder().encodeToString(fileContent), password).getBytes(UTF_8);
     }
 
-    public static void main(String[] args)
-            throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException,
-            InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException,
-            ClassNotFoundException {
-
-        // create a tuple object to be encrypted
-        Tuple tuple = new Tuple("Hi", 27);
-        // encrypt the tuple object
-        IvParameterSpec iv = CryptoUtils.generateIv();
-
-        SealedObject sealedObject = encrypt(tuple, "this is a stron pass", "Hello", iv);
-        // deserialize the sealed object
-        Tuple tuple2 = (Tuple) decrypt(sealedObject, "this is a stron pass", "Hello", iv);
-        // check if the tuple is decrypted correctly
-        // System.out.println(tuple.equals(tuple2));
-        System.out.println(sealedObject.toString());
-
-    }
 }

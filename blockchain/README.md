@@ -4,6 +4,6 @@
 
 - Transaction
 - [x] Boiler plate code
-- [ ] Encryption/Decryption support
+- [x] Encryption/Decryption support
 
 [ ] Cross Validation
