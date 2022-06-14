@@ -3,33 +3,42 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale.Category;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SealedObject;
 import javax.crypto.spec.IvParameterSpec;
+import javax.swing.SingleSelectionModel;
 
 import security.AesGcmPasswordEncryption;
+import security.KeyPairManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class BlockChain implements Serializable {
-    /**
-     * TODO:
-     * 1. Boiler palte
-     */
 
     // Metadata
-    private final Map<String, List<Transaction>> TRANS_VALIDATION; // Transaction are stored on the blockchain
+    /**
+     * Category 1: for Doctors (Doctor (Name/ID) -> Registration Transactions)
+     * Category 2: for Patients (Patient (Name/ID) -> Patient Transactions)
+     */
+    private final Map<String, Map<String, List<Transaction>>> categories;
 
     // private final Map<String, String> REGISTRATION_TABLE; // NOT STORED ON THE
     // BLOCK CHAIN
-    private final List<Block> BLOCK_CHAIN;
+    private final List<Block> blockChain;
 
     public BlockChain() {
-        TRANS_VALIDATION = new HashMap<>();
-        BLOCK_CHAIN = new ArrayList<>();
+        categories = new HashMap<>();
+        blockChain = new ArrayList<>();
     }
 
     /**
@@ -75,17 +84,44 @@ public class BlockChain implements Serializable {
 
     }
 
+    public String getPreviousTransactionHash(String category, String id) {
+        List<Transaction> relationalTransactions = categories.get(category).get(id);
+        // Get the last transaction
+        return relationalTransactions.get(relationalTransactions.size() - 1).getHash();
+    }
+
     /**
      * Handles Creating new blocks, incase exceeding the threshold
      * overwise, just add the transaction
      */
-    public void addTransaction(Transaction data) {
-        // Checking the threshold
-        // Mine the block
-        //
-        // Just Add
-        //
-        // BLOCK_CHAIN.ad
+    public void addTransaction(String category, String id, Key signatureKey, String[] data, String encryptKey) {
+        String previousHash = getPreviousTransactionHash(category, id);
+        Transaction transaction = new Transaction(previousHash, signatureKey, data, encryptKey);
+        Block currentBlock = blockChain.get(blockChain.size() - 1);
+
+        Map<String, List<Transaction>> relations = categories.get(category);
+
+        // Add to the blockchain
+        if (currentBlock.isFull()) {
+            // Takes around 20~30s
+            currentBlock.mineBlock(4);
+            Block newBlock = new Block(currentBlock.getHash());
+            newBlock.addTransaction(transaction);
+        } else
+            currentBlock.addTransaction(transaction);
+
+        // Updating the relation Map
+        if (relations.containsKey(id)) {
+            // Update the Categories Map
+            List<Transaction> transRelation = relations.get(id);
+            transRelation.add(transaction);
+
+        } else {
+            // Update the Categories Map
+            relations.put(id, new ArrayList<>());
+            List<Transaction> transRelation = relations.get(id);
+            transRelation.add(transaction);
+        }
     }
 
     /**
@@ -98,7 +134,7 @@ public class BlockChain implements Serializable {
     }
 
     public int getSize() {
-        return BLOCK_CHAIN.size();
+        return blockChain.size();
     }
 
     public String readAuthDate(String password) {

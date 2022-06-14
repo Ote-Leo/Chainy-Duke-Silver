@@ -1,5 +1,6 @@
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.Timestamp;
@@ -14,6 +15,7 @@ import javax.crypto.NoSuchPaddingException;
 
 import security.AesGcmPasswordEncryption;
 import security.DukeHash;
+import security.KeyPairManager;
 
 /**
  * The main data unit in the blockchain.
@@ -28,9 +30,9 @@ public final class Transaction {
 
     private final Timestamp timestamp;
 
-    public Transaction(String previousHash, String signature, String[] data, String encryptKey) {
+    public Transaction(String previousHash, Key key, String[] data, String encryptKey) {
         this.previousHash = previousHash;
-        this.signature = signature;
+        this.signature = assignSignature(key);
         this.data = encryptData(data, encryptKey);
         this.keyPair = Optional.empty();
 
@@ -38,15 +40,26 @@ public final class Transaction {
         this.timestamp = new Timestamp(System.currentTimeMillis());
     }
 
-    public Transaction(String previousHash, String signature, String[] data, Optional<String> keyPair,
+    public Transaction(String previousHash, Key key, String[] data, Optional<String> keyPair,
             String encryptKey) {
         this.previousHash = previousHash;
-        this.signature = signature;
+        this.signature = assignSignature(key);
         this.keyPair = keyPair;
         this.data = encryptData(data, encryptKey);
 
         this.uuid = UUID.randomUUID();
         this.timestamp = new Timestamp(System.currentTimeMillis());
+    }
+
+    public String assignSignature(Key key) {
+        try {
+            return KeyPairManager.decrypt(getHash(), key);
+        } catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
+                | BadPaddingException e) {
+            System.out.println("It's way better to commit suicide");
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public String getData() {
