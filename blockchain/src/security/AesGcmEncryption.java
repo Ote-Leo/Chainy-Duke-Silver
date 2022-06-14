@@ -75,6 +75,9 @@ public class AesGcmEncryption {
     }
 
     /**
+     * RUNNING EXAMPLES:
+     * 
+     * 
      * --- AES GCM ENCRYPTION ---
      * Input (Plain Text) : This is the original message from Ote Leo
      * Key (hex) : c747e425f0caf5943f60f901c700a18465ed4081defcf3fa4f07e588edf8eb7d
@@ -94,47 +97,4 @@ public class AesGcmEncryption {
      * Key (hex) : c747e425f0caf5943f60f901c700a18465ed4081defcf3fa4f07e588edf8eb7d
      * Decrypted Message (Plain Text): This is the original message from Ote Leo
      */
-    // public static void main(String[] args) throws NoSuchAlgorithmException,
-    // InvalidKeyException, NoSuchPaddingException,
-    // IllegalBlockSizeException, BadPaddingException,
-    // InvalidAlgorithmParameterException {
-    // // IllegalBlockSizeException, BadPaddingException,
-    // String OUTPUT_FORMAT = "%-30s: %s%n";
-    // String MESSAGE = "This is the original message from Ote Leo";
-    // // String OUTPUT_FORMAT = "%-30s: %s%n";
-    // // Encrypt & decrypt using the same key
-    // // get AES 256 bits key
-    // SecretKey secretKey = CryptoUtils.getAESKey(AES_KEY_BIT);
-    // // // get AES 256 bits key
-    // // Encrypt & decrypt using the same iv
-    // // AES-GCM needs IV 96 bits
-    // byte[] iv = CryptoUtils.getRandomNonce(IV_LENGTH_BYTE);
-    // // // AES-GCM needs IV 96 bits
-    // byte[] encryptedMessage =
-    // AesGcmEncryption.encryptWithPrefixIV(MESSAGE.getBytes(UTF_8), secretKey, iv);
-
-    // System.out.println("\n--- AES GCM ENCRYPTION ---");
-    // System.out.format(OUTPUT_FORMAT, "Input (Plain Text)", MESSAGE);
-    // System.out.format(OUTPUT_FORMAT, "Key (hex)",
-    // CryptoUtils.hexRepresentation(secretKey.getEncoded()));
-    // System.out.format(OUTPUT_FORMAT, "IV (hex)",
-    // CryptoUtils.hexRepresentation(iv));
-    // System.out.format(OUTPUT_FORMAT, "Encrypted (hex)",
-    // CryptoUtils.hexRepresentation(encryptedMessage));
-    // System.out.format(OUTPUT_FORMAT, "Encrypted (hex) (block = 16)",
-    // CryptoUtils.hexWithBlockSize(encryptedMessage, 16));
-    // // System.out.format(OUTPUT_FORMAT, "IV (hex)",
-    // System.out.println("\n--- AES GCM DECRYPTION ---");
-    // System.out.format(OUTPUT_FORMAT, "Input (hex)",
-    // CryptoUtils.hexRepresentation(encryptedMessage));
-    // System.out.format(OUTPUT_FORMAT, "Input (hex) (block = 16)",
-    // CryptoUtils.hexWithBlockSize(encryptedMessage, 16));
-    // System.out.format(OUTPUT_FORMAT, "Key (hex)",
-    // CryptoUtils.hexRepresentation(secretKey.getEncoded()));
-
-    // String decryptedMessage = decryptWithPrefixIV(encryptedMessage, secretKey);
-    // // System.out.format(OUTPUT_FORMAT, "Input (hex)",
-    // System.out.format(OUTPUT_FORMAT, "Decrypted Message (Plain Text)",
-    // decryptedMessage);
-    // }
 }

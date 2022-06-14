@@ -1,25 +1,44 @@
 package security;
 
+import util.Tuple;
+
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.util.Base64;
 
+import javax.crypto.AEADBadTagException;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SealedObject;
 import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * AES-GCM inputs - 12 bytes IV, need the same IV and secret keys for encryption
@@ -35,6 +54,7 @@ import javax.crypto.spec.GCMParameterSpec;
  */
 public class AesGcmPasswordEncryption {
     private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
+    private static final String OBJ_ENCRYPT_ALGO = "AES/CBC/PKCS5Padding";
     private static final int TAG_LENGTH_BIT = 128; // values must be one of {128, 120, 112, 104, 96}
     private static final int IV_LENGTH_BYTE = 12;
     private static final int SALT_LENGTH_BYTE = 16;
@@ -43,6 +63,9 @@ public class AesGcmPasswordEncryption {
     private static final Charset UTF_8 = StandardCharsets.UTF_8;
 
     /**
+     * Encrypt a message using AES/GCM encryption using a password as the encryption
+     * key
+     * 
      * @param message  Targeted message to be encrypted
      * @param password The password used to generate the secret key
      * @return A base64 encoded AES encrypted text
@@ -57,7 +80,6 @@ public class AesGcmPasswordEncryption {
     public static byte[] encrypt(byte[] message, String password)
             throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException,
             InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-
         byte[] iv = CryptoUtils.getRandomNonce(IV_LENGTH_BYTE);
         byte[] salt = CryptoUtils.getRandomNonce(SALT_LENGTH_BYTE);
         SecretKey secretKey = CryptoUtils.getAESKeyFromPassword(password.toCharArray(), salt);
@@ -72,6 +94,47 @@ public class AesGcmPasswordEncryption {
 
         // return Base64.getEncoder().encodeToString(cipherTextWithIVSalt);
         return cipherTextWithIVSalt;
+    }
+
+    /**
+     * Serializing Encrypted Objects
+     * 
+     * @param obj      The Object to encrypt
+     * @param os       The output stream of the serialized object
+     * @param password The Encryption key
+     * @throws NoSuchAlgorithmException
+     * @throws NoSuchPaddingException
+     * @throws InvalidKeyException
+     * @throws IllegalBlockSizeException
+     * @throws IOException
+     * @throws InvalidAlgorithmParameterException
+     */
+    public static void encrypt(Serializable obj, String password, String salt)
+            throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException,
+            IOException, InvalidAlgorithmParameterException {
+        // Cipher cipher = Cipher.getInstance(OBJ_ENCRYPT_ALGO);
+        // cipher.init(Cipher.ENCRYPT_MODE, fromStringToAESKey(password), new
+        // IvParameterSpec(new byte[16]));
+
+        // SealedObject sealedObject = new SealedObject(obj, cipher);
+        // FileOutputStream fos = new FileOutputStream(path);
+        // CipherOutputStream cos = new CipherOutputStream(new
+        // BufferedOutputStream(fos), cipher);
+
+        // ObjectOutputStream oos = new ObjectOutputStream(cos);
+        // oos.writeObject(sealedObject);
+        // oos.close();
+        // fos.close();
+    }
+
+    public static SecretKey getKeyFromPassword(String password, String salt)
+            throws NoSuchAlgorithmException, InvalidKeySpecException {
+
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(), 65536, 256);
+        SecretKey secret = new SecretKeySpec(factory.generateSecret(spec)
+                .getEncoded(), "AES");
+        return secret;
     }
 
     /**
@@ -104,9 +167,10 @@ public class AesGcmPasswordEncryption {
     }
 
     /**
+     * Decrypting a (AES/GCM) cipher given it's password as a key
      * 
-     * @param cipherText
-     * @param password
+     * @param cipherText The encrypted message
+     * @param password   The password (key) of the encrypted message
      * @return Hopefully the original message, fingers crossed
      * @throws InvalidKeySpecException
      * @throws NoSuchAlgorithmException
@@ -140,9 +204,70 @@ public class AesGcmPasswordEncryption {
         return new String(cipher.doFinal(cipherMessage), UTF_8);
     }
 
-    public static byte[] decryptFile(String path, String password) throws IOException {
+    /**
+     * Deserializing encrypted objects from an inputstream
+     * 
+     * @param is       Encrypted object inputstream to be deserialized
+     * @param password The encryption key
+     * @return The deserialized object (casted to Object type)
+     * @throws IOException
+     * @throws NoSuchAlgorithmException
+     * @throws NoSuchPaddingException
+     * @throws InvalidKeyException
+     * @throws ClassNotFoundException
+     * @throws IllegalBlockSizeException
+     * @throws BadPaddingException
+     */
+    public static Object decrypt(InputStream is, String password)
+            throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
+            ClassNotFoundException, IllegalBlockSizeException, BadPaddingException {
+        SecretKeySpec sks = new SecretKeySpec(password.getBytes(), ENCRYPTION_ALGORITHM);
+        Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
+        cipher.init(Cipher.DECRYPT_MODE, sks);
+
+        CipherInputStream cis = new CipherInputStream(is, cipher);
+        ObjectInputStream ois = new ObjectInputStream(cis);
+
+        Object result = ((SealedObject) ois.readObject()).getObject(cipher);
+        ois.close();
+        return result;
+    }
+
+    public static byte[] decryptFile(String path, String password)
+            throws IOException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException,
+            NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
         // Read the file
         byte[] fileContent = Files.readAllBytes(Paths.get(path));
-        return decrypt(fileContent, password);
+        return decrypt(Base64.getEncoder().encodeToString(fileContent), password).getBytes(UTF_8);
+    }
+
+    public static void main(String[] args)
+            throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException,
+            InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+        String USER_NAME = "OTE RAGHEB LEO";
+        String KEY = "This is a very strong and complicated password, I hope that this would &*()$#!#%!$@^#$^work please god please";
+
+        String PASSWORD = DukeHash.hash(USER_NAME + KEY);
+        String pass = "Some other password";
+        String MESSAGE = "This is the original message from OTE LEO";
+
+        Tuple<String, String> t = new Tuple<>("A", "Tuple");
+        encrypt(MESSAGE.getBytes(), PASSWORD);
+
+        // SealedObject so = new SealedObject(object, Cipher);
+
+        System.out.println("KEY: " + PASSWORD);
+        System.out.println("ORIGINAL MESSAGE: " + MESSAGE + "\n\n");
+        System.out.println("Encrypting ...");
+        String messageEncryption = new String(Base64.getEncoder().encode(encrypt(MESSAGE.getBytes(), PASSWORD)));
+        System.out.println(messageEncryption);
+
+        System.out.println("Decrypting ...");
+        try {
+            String messageDecryption = decrypt(messageEncryption, pass);
+            System.out.println(messageDecryption);
+        } catch (AEADBadTagException e) {
+            System.out.println("INVALID PASSWORD");
+        }
     }
 }

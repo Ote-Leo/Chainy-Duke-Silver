@@ -1,19 +1,25 @@
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class BlockChain implements Serializable {
+    /**
+     * TODO:
+     * 1. Boiler palte
+     */
+
     // Metadata
-    private final Map<String, List<Transaction>> TRANS_VALIDATION; // Transsaction are stored on the blockchain
-    private final Map<String, String> REGISTRATION_TABLE; // NOT STORED ON THE BLOCK CHAIN
+    private final Map<String, List<Transaction>> TRANS_VALIDATION; // Transaction are stored on the blockchain
+
+    // private final Map<String, String> REGISTRATION_TABLE; // NOT STORED ON THE
+    // BLOCK CHAIN
     private final List<Block> BLOCK_CHAIN;
 
     public BlockChain() {
@@ -22,26 +28,42 @@ public class BlockChain implements Serializable {
     }
 
     /**
-     * Saving the blockchain to the disk
+     * Encrypt (AES256/GCM) & Serializes a given blockchain to a specified path
+     * 
+     * @param path       Target path for the serialized blockchain
+     * @param password   The Encryption key
+     * @param blockChain The chain to be serialized
+     * @return Successful serialization status
      */
-    public static void save(String path, BlockChain blockChain) throws FileNotFoundException, IOException {
-        FileOutputStream fos = new FileOutputStream(path);
-        ObjectOutputStream oos = new ObjectOutputStream(fos);
-        oos.writeObject(blockChain);
-        fos.close();
-        oos.close();
+    public static boolean safeFileSerialization(String path, String password, BlockChain blockChain) {
+        try {
+            FileOutputStream fos = new FileOutputStream(path);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(blockChain);
+            oos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 
     /**
      * Loading the Blockchain from disk
+     * Decrypt the blockchain before deserializing
      */
-    public static BlockChain load(String path) throws FileNotFoundException, ClassNotFoundException, IOException {
-        FileInputStream fis = new FileInputStream(path);
-        ObjectInputStream ois = new ObjectInputStream(fis);
-        BlockChain blockChain = (BlockChain) ois.readObject();
-        fis.close();
-        ois.close();
-        return blockChain;
+    public static BlockChain safeFileDeserialization(String path, String password) {
+        try {
+            FileInputStream fis = new FileInputStream(path);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            BlockChain blockChain = (BlockChain) ois.readObject();
+            ois.close();
+            return blockChain;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**
@@ -49,11 +71,12 @@ public class BlockChain implements Serializable {
      * overwise, just add the transaction
      */
     public void addTransaction(Transaction data) {
-
         // Checking the threshold
         // Mine the block
         //
         // Just Add
+        //
+        // BLOCK_CHAIN.ad
     }
 
     /**
@@ -74,7 +97,8 @@ public class BlockChain implements Serializable {
     }
 
     public String toString() {
-        return BLOCK_CHAIN.toString();
+        // return BLOCK_CHAIN.toString();
+        return "Wow, this is a blockchain";
     }
 
     public static void main(String[] args) {

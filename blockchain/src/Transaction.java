@@ -8,7 +8,6 @@ import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
 
-import javax.crypto.AEADBadTagException;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -119,7 +118,7 @@ public final class Transaction {
     }
 
     public String getHash() {
-        String transactionBody = data + keyPair.toString() + previousHash + timestamp.toString() + uuid;
+        String transactionBody = data + keyPair.toString() + previousHash + timestamp.toString() + uuid + signature;
         return DukeHash.hash(transactionBody);
     }
 
