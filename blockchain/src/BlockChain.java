@@ -10,9 +10,11 @@ import java.security.PublicKey;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import javax.crypto.SealedObject;
 import javax.crypto.spec.IvParameterSpec;
+import javax.swing.plaf.synth.SynthOptionPaneUI;
 
 import security.AesGcmPasswordEncryption;
 import security.KeyPairManager;
@@ -131,6 +133,7 @@ public class BlockChain implements Serializable {
             System.out.println(t + "\n\n\n");
             Block newBlock = new Block(currentBlock.getHash());
             newBlock.addTransaction(transaction);
+            blockChain.add(newBlock);
         } else
             currentBlock.addTransaction(transaction);
 
@@ -153,7 +156,18 @@ public class BlockChain implements Serializable {
      * @return TRUE if the chain is valid
      */
     public boolean crossValidate() {
-        return false;
+        for (int i = getSize() - 1; i > 0; i--) {
+            Block lastblock = blockChain.get(i);
+            Stack<String> checkhash = new Stack<String>();
+            checkhash.add(lastblock.getPreviousHash());
+            Block checkblock = blockChain.get(i - 1);
+            if (checkblock.getHash().equals(checkhash.peek())) {
+                checkhash.pop();
+            } else {
+                return false;
+            }
+        }
+        return true;
     }
 
     public int getSize() {
@@ -185,5 +199,7 @@ public class BlockChain implements Serializable {
         blockChain.addTransaction("Doctor", "Ote", keyPair.snd, new String[] { "Here", "is", "some", "data" },
                 PASSWORD);
         System.out.println(blockChain);
+        System.out.println(blockChain.getSize());
+        System.out.println(blockChain.crossValidate());
     }
 }
