@@ -8,6 +8,7 @@ import java.security.spec.KeySpec;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -19,6 +20,12 @@ public class CryptoUtils {
         byte[] nonce = new byte[numByte];
         new SecureRandom().nextBytes(nonce);
         return nonce;
+    }
+
+    public static IvParameterSpec generateIv() {
+        byte[] iv = new byte[16];
+        new SecureRandom().nextBytes(iv);
+        return new IvParameterSpec(iv);
     }
 
     public static SecretKey getAESKey(int keySize) throws NoSuchAlgorithmException {

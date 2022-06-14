@@ -102,29 +102,39 @@ public class AesGcmPasswordEncryption {
      * @param obj      The Object to encrypt
      * @param os       The output stream of the serialized object
      * @param password The Encryption key
+     * @return
      * @throws NoSuchAlgorithmException
      * @throws NoSuchPaddingException
      * @throws InvalidKeyException
      * @throws IllegalBlockSizeException
      * @throws IOException
      * @throws InvalidAlgorithmParameterException
+     * @throws InvalidKeySpecException
      */
-    public static void encrypt(Serializable obj, String password, String salt)
+    public static SealedObject encrypt(Serializable obj, String password, String salt, IvParameterSpec iv)
             throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException,
-            IOException, InvalidAlgorithmParameterException {
-        // Cipher cipher = Cipher.getInstance(OBJ_ENCRYPT_ALGO);
-        // cipher.init(Cipher.ENCRYPT_MODE, fromStringToAESKey(password), new
-        // IvParameterSpec(new byte[16]));
+            InvalidAlgorithmParameterException, InvalidKeySpecException, IOException {
 
-        // SealedObject sealedObject = new SealedObject(obj, cipher);
-        // FileOutputStream fos = new FileOutputStream(path);
-        // CipherOutputStream cos = new CipherOutputStream(new
-        // BufferedOutputStream(fos), cipher);
+        SecretKey K = getKeyFromPassword(password, salt);
+        Cipher cipher = Cipher.getInstance(OBJ_ENCRYPT_ALGO);
+        cipher.init(Cipher.ENCRYPT_MODE, K, iv);
+        SealedObject sealedObject = new SealedObject(obj, cipher);
+        return sealedObject;
 
-        // ObjectOutputStream oos = new ObjectOutputStream(cos);
-        // oos.writeObject(sealedObject);
-        // oos.close();
-        // fos.close();
+    }
+
+    // make a decryption method that takes in a sealed object and password
+    // and returns the decrypted object
+    public static Serializable decrypt(SealedObject sealedObject, String password, String salt, IvParameterSpec iv)
+            throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException,
+            IOException, InvalidAlgorithmParameterException, InvalidKeySpecException, ClassNotFoundException,
+            BadPaddingException {
+
+        SecretKey K = getKeyFromPassword(password, salt);
+        Cipher cipher = Cipher.getInstance(OBJ_ENCRYPT_ALGO);
+        cipher.init(Cipher.DECRYPT_MODE, K, iv);
+        Serializable obj = (Serializable) sealedObject.getObject(cipher);
+        return obj;
     }
 
     public static SecretKey getKeyFromPassword(String password, String salt)
@@ -243,31 +253,20 @@ public class AesGcmPasswordEncryption {
 
     public static void main(String[] args)
             throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException,
-            InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-        String USER_NAME = "OTE RAGHEB LEO";
-        String KEY = "This is a very strong and complicated password, I hope that this would &*()$#!#%!$@^#$^work please god please";
+            InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException, ClassNotFoundException {
 
-        String PASSWORD = DukeHash.hash(USER_NAME + KEY);
-        String pass = "Some other password";
-        String MESSAGE = "This is the original message from OTE LEO";
+        // create a tuple object to be encrypted
+        Tuple tuple = new Tuple("Hi", 27);
+        // encrypt the tuple object
+        IvParameterSpec iv = CryptoUtils.generateIv();
 
-        Tuple<String, String> t = new Tuple<>("A", "Tuple");
-        encrypt(MESSAGE.getBytes(), PASSWORD);
+        SealedObject sealedObject = encrypt(tuple, "this is a stron pass","Hello",iv);
+        // deserialize the sealed object
+        Tuple tuple2 = (Tuple) decrypt(sealedObject, "this is a stron pass","Hello",iv);
+        //check if the tuple is decrypted correctly
+        //System.out.println(tuple.equals(tuple2));
+        System.out.println(sealedObject.toString());
 
-        // SealedObject so = new SealedObject(object, Cipher);
 
-        System.out.println("KEY: " + PASSWORD);
-        System.out.println("ORIGINAL MESSAGE: " + MESSAGE + "\n\n");
-        System.out.println("Encrypting ...");
-        String messageEncryption = new String(Base64.getEncoder().encode(encrypt(MESSAGE.getBytes(), PASSWORD)));
-        System.out.println(messageEncryption);
-
-        System.out.println("Decrypting ...");
-        try {
-            String messageDecryption = decrypt(messageEncryption, pass);
-            System.out.println(messageDecryption);
-        } catch (AEADBadTagException e) {
-            System.out.println("INVALID PASSWORD");
-        }
     }
 }
