@@ -253,20 +253,20 @@ public class AesGcmPasswordEncryption {
 
     public static void main(String[] args)
             throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException,
-            InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException, ClassNotFoundException {
+            InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException,
+            ClassNotFoundException {
 
         // create a tuple object to be encrypted
         Tuple tuple = new Tuple("Hi", 27);
         // encrypt the tuple object
         IvParameterSpec iv = CryptoUtils.generateIv();
 
-        SealedObject sealedObject = encrypt(tuple, "this is a stron pass","Hello",iv);
+        SealedObject sealedObject = encrypt(tuple, "this is a stron pass", "Hello", iv);
         // deserialize the sealed object
-        Tuple tuple2 = (Tuple) decrypt(sealedObject, "this is a stron pass","Hello",iv);
-        //check if the tuple is decrypted correctly
-        //System.out.println(tuple.equals(tuple2));
+        Tuple tuple2 = (Tuple) decrypt(sealedObject, "this is a stron pass", "Hello", iv);
+        // check if the tuple is decrypted correctly
+        // System.out.println(tuple.equals(tuple2));
         System.out.println(sealedObject.toString());
-
 
     }
 }

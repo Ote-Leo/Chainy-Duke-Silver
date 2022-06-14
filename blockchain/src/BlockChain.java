@@ -6,6 +6,11 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+import javax.crypto.SealedObject;
+import javax.crypto.spec.IvParameterSpec;
+
+import security.AesGcmPasswordEncryption;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -35,35 +40,39 @@ public class BlockChain implements Serializable {
      * @param blockChain The chain to be serialized
      * @return Successful serialization status
      */
-    public static boolean safeFileSerialization(String path, String password, BlockChain blockChain) {
+    public static boolean safeFileSerialization(String path, String password, BlockChain blockChain, String salt,
+            IvParameterSpec iv) {
         try {
-            FileOutputStream fos = new FileOutputStream(path);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(blockChain);
-            oos.close();
+            FileOutputStream fileOut = new FileOutputStream(path);
+            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+            out.writeObject(AesGcmPasswordEncryption.encrypt(blockChain, password, salt, iv));
+            out.close();
+            fileOut.close();
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
-
-        return true;
     }
 
     /**
      * Loading the Blockchain from disk
      * Decrypt the blockchain before deserializing
      */
-    public static BlockChain safeFileDeserialization(String path, String password) {
+    public static BlockChain safeFileDeserialization(String path, String password, String salt, IvParameterSpec iv) {
         try {
-            FileInputStream fis = new FileInputStream(path);
-            ObjectInputStream ois = new ObjectInputStream(fis);
-            BlockChain blockChain = (BlockChain) ois.readObject();
-            ois.close();
+            FileInputStream fileIn = new FileInputStream(path);
+            ObjectInputStream in = new ObjectInputStream(fileIn);
+            BlockChain blockChain = (BlockChain) AesGcmPasswordEncryption.decrypt((SealedObject) in.readObject(),
+                    password, salt, iv);
+            in.close();
+            fileIn.close();
             return blockChain;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
+
     }
 
     /**
