@@ -32,28 +32,28 @@ public final class Transaction {
 
     public Transaction(String previousHash, Key key, String[] data, String encryptKey) {
         this.previousHash = previousHash;
-        this.signature = assignSignature(key);
         this.data = encryptData(data, encryptKey);
         this.keyPair = Optional.empty();
 
         this.uuid = UUID.randomUUID();
         this.timestamp = new Timestamp(System.currentTimeMillis());
+        this.signature = assignSignature(key);
     }
 
     public Transaction(String previousHash, Key key, String[] data, Optional<String> keyPair,
             String encryptKey) {
         this.previousHash = previousHash;
-        this.signature = assignSignature(key);
         this.keyPair = keyPair;
         this.data = encryptData(data, encryptKey);
 
         this.uuid = UUID.randomUUID();
         this.timestamp = new Timestamp(System.currentTimeMillis());
+        this.signature = assignSignature(key);
     }
 
     public String assignSignature(Key key) {
         try {
-            return KeyPairManager.decrypt(getHash(), key);
+            return KeyPairManager.encrypt(getHash(), key);
         } catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
                 | BadPaddingException e) {
             System.out.println("It's way better to commit suicide");

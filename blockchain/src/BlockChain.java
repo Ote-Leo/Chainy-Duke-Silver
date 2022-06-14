@@ -3,22 +3,21 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
-import java.util.Locale.Category;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SealedObject;
 import javax.crypto.spec.IvParameterSpec;
-import javax.swing.SingleSelectionModel;
 
 import security.AesGcmPasswordEncryption;
 import security.KeyPairManager;
+
+import util.Tuple;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -85,6 +84,18 @@ public class BlockChain implements Serializable {
     }
 
     public String getPreviousTransactionHash(String category, String id) {
+        if (!categories.containsKey(category)) {
+            Map<String, List<Transaction>> relations = new HashMap<>();
+            relations.put(id, new ArrayList<>());
+            categories.put(category, relations);
+            return "";
+        }
+        Map<String, List<Transaction>> relations = new HashMap<>();
+        if (!relations.containsKey(id)) {
+            relations.put(id, new ArrayList<>());
+            return "";
+        }
+
         List<Transaction> relationalTransactions = categories.get(category).get(id);
         // Get the last transaction
         return relationalTransactions.get(relationalTransactions.size() - 1).getHash();
@@ -95,7 +106,18 @@ public class BlockChain implements Serializable {
      * overwise, just add the transaction
      */
     public void addTransaction(String category, String id, Key signatureKey, String[] data, String encryptKey) {
-        String previousHash = getPreviousTransactionHash(category, id);
+        if (blockChain.isEmpty()) {
+            // Create a block
+            Block block = new Block("");
+            blockChain.add(block);
+        }
+        String previousHash;
+        try {
+            previousHash = getPreviousTransactionHash(category, id);
+        } catch (NullPointerException e) {
+            previousHash = "";
+        }
+
         Transaction transaction = new Transaction(previousHash, signatureKey, data, encryptKey);
         Block currentBlock = blockChain.get(blockChain.size() - 1);
 
@@ -104,7 +126,9 @@ public class BlockChain implements Serializable {
         // Add to the blockchain
         if (currentBlock.isFull()) {
             // Takes around 20~30s
-            currentBlock.mineBlock(4);
+            System.out.println("\n\n\nMining ...");
+            util.Tuple<String, Timestamp> t = currentBlock.mineBlock(4);
+            System.out.println(t + "\n\n\n");
             Block newBlock = new Block(currentBlock.getHash());
             newBlock.addTransaction(transaction);
         } else
@@ -115,7 +139,6 @@ public class BlockChain implements Serializable {
             // Update the Categories Map
             List<Transaction> transRelation = relations.get(id);
             transRelation.add(transaction);
-
         } else {
             // Update the Categories Map
             relations.put(id, new ArrayList<>());
@@ -141,12 +164,26 @@ public class BlockChain implements Serializable {
         return null;
     }
 
+    @Override
     public String toString() {
-        // return BLOCK_CHAIN.toString();
-        return "Wow, this is a blockchain";
+        return "BlockChain [blockChain=" + blockChain + ", categories=" + categories + "]";
     }
 
-    public static void main(String[] args) {
-        System.out.println("Hello World!");
+    public static void main(String[] args) throws NoSuchAlgorithmException {
+        String PASSWORD = "This is a strong and complicated password, Please god make this work";
+        Tuple<PrivateKey, PublicKey> keyPair = KeyPairManager.generateKeyPair();
+
+        BlockChain blockChain = new BlockChain();
+
+        blockChain.addTransaction("Doctor", "Ote", keyPair.snd, new String[] { "Here", "is", "some", "data" },
+                PASSWORD);
+        blockChain.addTransaction("Doctor", "Ote", keyPair.snd, new String[] { "Here", "is", "some", "data" },
+                PASSWORD);
+        blockChain.addTransaction("Doctor", "Ote", keyPair.snd, new String[] { "Here", "is", "some", "data" },
+                PASSWORD);
+
+        blockChain.addTransaction("Doctor", "Ote", keyPair.snd, new String[] { "Here", "is", "some", "data" },
+                PASSWORD);
+        System.out.println(blockChain);
     }
 }

@@ -41,4 +41,9 @@ public final class Tuple<X, Y> implements Serializable {
             return false;
         return true;
     }
+
+    @Override
+    public String toString() {
+        return "Tuple [fst=" + fst + ", snd=" + snd + "]";
+    }
 }
