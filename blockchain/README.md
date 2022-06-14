@@ -5,5 +5,5 @@
 - Transaction
 - [x] Boiler plate code
 - [x] Encryption/Decryption support
-
-[ ] Cross Validation
+- [ ] Interactive tty
+- [ ] Cross Validation
